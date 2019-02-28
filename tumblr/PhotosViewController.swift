@@ -10,19 +10,20 @@ import UIKit
 import AlamofireImage;
 
 class PhotosViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-    
-    
+
     
     @IBOutlet weak var postsTableView: UITableView!;
     
     // property 'posts' store posts
-    var posts: [[String: Any]] = [];
-    
-    
+    var posts: [[String: Any]] = []
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
-       
+        self.postsTableView.delegate = self
+        self.postsTableView.dataSource = self
+        postsTableView.rowHeight = 240;
+        
         // Network request snippet
         let url = URL(string: "https://api.tumblr.com/v2/blog/humansofnewyork.tumblr.com/posts/photo?api_key=Q6vHoaVm5L1u2ZAW1fqv3Jw48gFzYVg9P0vH0VHl3GVy6quoGV")!
         let session = URLSession(configuration: .default, delegate: nil, delegateQueue: OperationQueue.main)
@@ -30,14 +31,20 @@ class PhotosViewController: UIViewController, UITableViewDataSource, UITableView
         let task = session.dataTask(with: url) { (data, response, error) in
             if let error = error {
                 print(error.localizedDescription)
-            } else if let data = data,let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+            } else if let data = data,
+                let dataDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                 
                 // Get the dictionary from the response key
                 let responseDictionary = dataDictionary["response"] as! [String: Any]
                 // Store the returned array of dictionaries in our posts property
                 self.posts = responseDictionary["posts"] as! [[String: Any]]
-
-                print(dataDictionary);
+                
+//                self.posts = dataDictionary["response"]["posts"] as! [[String:Any]];
+                
+                
+                self.postsTableView.reloadData()
+            
+//                print(dataDictionary)
 
             }
         }
@@ -58,6 +65,7 @@ class PhotosViewController: UIViewController, UITableViewDataSource, UITableView
         let post = posts[indexPath.row];
         
         if let photos = post["photos"] as? [[String: Any]] {
+            // photos is NOT nil, we can use it!
             let photo = photos[0]
             let originalSize = photo["original_size"] as! [String: Any]
             let urlString = originalSize["url"] as! String
@@ -66,7 +74,6 @@ class PhotosViewController: UIViewController, UITableViewDataSource, UITableView
             cell.photoCellImageView.af_setImage(withURL: url!);
             
         }
-        
         
         return cell;
     }
